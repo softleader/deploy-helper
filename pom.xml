@@ -1,0 +1,60 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>tw.com.softleader</groupId>
+	<artifactId>deploy-helper</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>deploy-helper</name>
+	<url>http://www.softleader.com.tw</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<softleader-framework.version>1.1.0.SNAPSHOT</softleader-framework.version>
+		<spring.io.platform.version>2.0.3.RELEASE</spring.io.platform.version>
+		<source.code.version>1.8</source.code.version>
+	</properties>
+
+	<plugin>
+		<groupId>com.zenjava</groupId>
+		<artifactId>javafx-maven-plugin</artifactId>
+		<version>8.7.0</version>
+		<configuration>
+			<vendor>Softleader</vendor>
+			<mainClass>tw.com.softleader.dh.App</mainClass>
+		</configuration>
+	</plugin>
+
+	<dependencies>
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-compress</artifactId>
+		    <version>1.8</version>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.16.10</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<finalName>${project.artifactId}-${project.version}</finalName>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.3</version>
+					<configuration>
+						<source>${source.code.version}</source>
+						<target>${source.code.version}</target>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+</project>
