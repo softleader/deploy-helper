@@ -54,13 +54,13 @@ public class SimpleAlert extends Alert {
         return alert.showAndWait().map(btn -> alert.expTextField.getText());
     }
 
-    public static void error(String header, Exception exception) {
+    public static void error(String header, Throwable throwable) {
         final SimpleAlert alert = getInstance(AlertType.ERROR, ButtonType.APPLY);
         alert.setHeaderText(header);
 
         alert.getDialogPane().setExpandableContent(alert.expContent);
         final StringWriter sw = new StringWriter();
-        exception.printStackTrace(new PrintWriter(sw));
+        throwable.printStackTrace(new PrintWriter(sw));
         alert.expTextArea.setText(sw.toString());
         alert.expContent.add(alert.expTextArea, 0, 0);
         alert.showAndWait();

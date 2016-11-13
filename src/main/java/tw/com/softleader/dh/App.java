@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Optional;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -25,6 +26,7 @@ public class App extends Application {
 
 	@Override
 	public void start(final Stage stage) {
+		System.out.println("start");
 		stage.setTitle("DeployHelper");
 
 		// ===佈署模組===
@@ -107,13 +109,18 @@ public class App extends Application {
 			deployHandler.setBackup(backupCheckBox.isSelected());
 			try {
 				disableButtons(backupCheckBox, openWarButton, openPathButton, deployButton);
-				deployHandler.deploy(logTextField::setText, () -> enableButtons(backupCheckBox, openWarButton, openPathButton, deployButton));
+				deployHandler.deploy(
+						log -> Platform.runLater(() -> logTextField.setText(log)),
+						() -> enableButtons(backupCheckBox, openWarButton, openPathButton, deployButton)
+				);
 			} catch (final DeployVerifyException ex) {
 				SimpleAlert.warn(ex.getMsgs());
 				enableButtons(backupCheckBox, openWarButton, openPathButton, deployButton);
+				ex.printStackTrace();
 			} catch (final Exception ex) {
 				SimpleAlert.error("佈署期間發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", ex);
 				enableButtons(backupCheckBox, openWarButton, openPathButton, deployButton);
+				ex.printStackTrace();
 			}
 		});
 

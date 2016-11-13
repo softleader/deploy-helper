@@ -13,8 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -42,30 +41,32 @@ public class DeployHandler {
 	private File backupFile;
 	private File deploiedFile;
 
-	ExecutorService executor = Executors.newSingleThreadExecutor();
-	public void deploy(Consumer<String> logConsumer, Runnable callback) throws Exception {
+	public void deploy(Consumer<String> logHandle, Runnable callback) throws Exception {
+		logHandle.accept("資料校驗中...");
 		verify();
 
-		executor.submit(() -> {
+		CompletableFuture.runAsync(() -> {
 			try {
-				logConsumer.accept("正在嘗試關閉Tomcat...");
+				logHandle.accept("正在嘗試關閉Tomcat...");
 				shutdownTomcat();
 
-				logConsumer.accept("正在進行備份...");
+				logHandle.accept("正在進行備份...");
 				backupWebApps();
 
-				logConsumer.accept("佈署中...");
+				logHandle.accept("佈署中...");
 				copyWarToWebApp();
 				doBeforeStart();
 
-				logConsumer.accept("佈署完畢，您已經可以結束此佈署程式");
+				logHandle.accept("佈署完畢，您已經可以結束此佈署程式");
 				startupTomcat();
 			} catch (final Exception e) {
-				logConsumer.accept(e.getMessage());
+				logHandle.accept(e.getMessage());
+				throw new RuntimeException(e);
 			} finally {
 				callback.run();
 			}
 		});
+
 	}
 
 	private void verify() throws DeployVerifyException {
@@ -100,7 +101,7 @@ public class DeployHandler {
 		final List<String> cmdAndArgs = Arrays.asList("cmd", "/c", "shutdown.bat");
 	    final ProcessBuilder pb = new ProcessBuilder(cmdAndArgs);
 	    pb.directory(tomcatBinPath.toFile());
-	    pb.start().destroyForcibly();
+	    pb.start().waitFor();
 	}
 
 	private void backupWebApps() throws Exception {
