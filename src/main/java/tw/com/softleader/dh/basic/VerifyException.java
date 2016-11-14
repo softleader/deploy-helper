@@ -3,17 +3,18 @@ package tw.com.softleader.dh.basic;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
-
 @SuppressWarnings("serial")
-public class DeployVerifyException extends Exception {
+public class VerifyException extends Exception {
 
-	@Getter
 	private final List<String> msgs;
 
-	public DeployVerifyException(List<String> msgs) {
+	public VerifyException(final List<String> msgs) {
 		super(msgs.stream().collect(Collectors.joining(",")));
 		this.msgs = msgs;
+	}
+
+	public List<String> getMsgs() {
+		return msgs;
 	}
 
 }

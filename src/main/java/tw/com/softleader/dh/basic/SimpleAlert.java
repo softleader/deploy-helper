@@ -20,31 +20,31 @@ public class SimpleAlert extends Alert {
 
     private static SimpleAlert simpleAlert;
 
-    public static Optional<ButtonType> confirm(String header) {
+    public static Optional<ButtonType> confirm(final String header) {
         final SimpleAlert alert = getInstance(AlertType.CONFIRMATION, ButtonType.APPLY, ButtonType.NO);
         alert.setHeaderText(header);
         return alert.showAndWait();
     }
 
-    public static void info(String header) {
-        final SimpleAlert alert = getInstance(AlertType.INFORMATION, ButtonType.APPLY);
+    public static void info(final String header) {
+        final SimpleAlert alert = getInstance(AlertType.INFORMATION, ButtonType.OK);
         alert.setHeaderText(header);
         alert.showAndWait();
     }
 
-    public static void warn(String header) {
+    public static void warn(final String header) {
         final SimpleAlert alert = getInstance(AlertType.WARNING, ButtonType.OK);
         alert.setHeaderText(header);
         alert.showAndWait();
     }
 
-    public static void warn(List<String> msgs) {
+    public static void warn(final List<String> msgs) {
         final SimpleAlert alert = getInstance(AlertType.WARNING, ButtonType.OK);
         alert.setHeaderText(msgs.stream().collect(Collectors.joining("\n")));
         alert.showAndWait();
     }
 
-    public static Optional<String> input(String header, String text) {
+    public static Optional<String> input(final String header, final String text) {
         final SimpleAlert alert = getInstance(AlertType.NONE, ButtonType.OK);
         alert.setHeaderText(header);
         alert.getDialogPane().setExpandableContent(alert.expContent);
@@ -54,8 +54,8 @@ public class SimpleAlert extends Alert {
         return alert.showAndWait().map(btn -> alert.expTextField.getText());
     }
 
-    public static void error(String header, Throwable throwable) {
-        final SimpleAlert alert = getInstance(AlertType.ERROR, ButtonType.APPLY);
+    public static void error(final String header, final Throwable throwable) {
+        final SimpleAlert alert = getInstance(AlertType.ERROR, ButtonType.OK);
         alert.setHeaderText(header);
 
         alert.getDialogPane().setExpandableContent(alert.expContent);
@@ -66,7 +66,7 @@ public class SimpleAlert extends Alert {
         alert.showAndWait();
     }
 
-    private static SimpleAlert getInstance(AlertType type, ButtonType... buttons) {
+    private static SimpleAlert getInstance(final AlertType type, final ButtonType... buttons) {
         if (simpleAlert == null) simpleAlert = new SimpleAlert();
         simpleAlert.setAlertType(type);
         simpleAlert.getDialogPane().setExpandableContent(null);
