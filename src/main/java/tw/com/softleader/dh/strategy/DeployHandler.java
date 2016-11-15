@@ -59,12 +59,12 @@ public class DeployHandler {
 				logHandle.accept("正在嘗試關閉Tomcat...");
 				TomcatComponent.shutdownTomcat(config, tomcatBinPath);
 
-				logHandle.accept("正在進行備份...");
-				backupWebApps();
-
 				logHandle.accept("佈署中...");
 				copyWarToWebApp();
 				doBeforeStart();
+
+				logHandle.accept("正在備份本次結果...");
+				backupWebApps();
 
 				TomcatComponent.startupTomcat(config, tomcatBinPath);
 				logHandle.accept("佈署完畢，您已經可以結束此佈署程式");
