@@ -17,8 +17,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -32,6 +34,7 @@ import tw.com.softleader.dh.basic.TomcatType;
 import tw.com.softleader.dh.basic.VerifyException;
 import tw.com.softleader.dh.strategy.BackupHandler;
 import tw.com.softleader.dh.strategy.DeployHandler;
+import tw.com.softleader.dh.strategy.RemarkHandler;
 
 public class App extends Application {
 
@@ -47,6 +50,8 @@ public class App extends Application {
 		final DeployHandler deployHandler = new DeployHandler(config);
 		// ===備份模組===
 		final BackupHandler backupHandler = new BackupHandler(config);
+		// ===註記模組===
+		final RemarkHandler remarkHandler = new RemarkHandler(config);
 
 		// ===元素準備===
 		final CheckBox backupCheckBox = new CheckBox("佈署完成後仍保留備份檔案");
@@ -65,10 +70,13 @@ public class App extends Application {
 		warChooser.getExtensionFilters().add(new ExtensionFilter("佈署檔", "*.war"));
 
 		final Button openWarButton = new Button("選擇要佈署的War檔");
+		openWarButton.setPrefWidth(150);
 		final TextField warPathTextField = new TextField();
 		warPathTextField.setEditable(false);
+		warPathTextField.setPrefWidth(400);
 
 		final Button openPathButton = new Button("選擇要佈署的路徑");
+		openPathButton.setPrefWidth(150);
 		final TextField depolyPathTextField = new TextField();
 		depolyPathTextField.setEditable(false);
 		depolyPathTextField.setPrefWidth(400);
@@ -82,8 +90,16 @@ public class App extends Application {
 		final Button restoreButton = new Button("還原為指定版本");
 
 		final ListView<String> backupHistory = new ListView<String>();
-		backupHistory.setPrefWidth(400);
+		backupHistory.setPrefWidth(200);
 		backupHistory.setPrefHeight(200);
+
+		final TextArea backupRemark = new TextArea();
+		backupRemark.setPrefWidth(350);
+		backupRemark.setPrefHeight(200);
+		backupRemark.setDisable(true);
+
+		final Button backupRemarkButton = new Button("儲存");
+		backupRemarkButton.setPrefWidth(350);
 
 		// 帶入預設值
 		Optional.ofNullable(config.getTomcatType()).ifPresent(type -> {
@@ -120,11 +136,21 @@ public class App extends Application {
 		fileChooserPane.setVgap(6);
 		fileChooserPane.getChildren().addAll(openWarButton, warPathTextField, openPathButton, depolyPathTextField);
 
+
+		final GridPane backupRemarkPane = new GridPane();
+		backupRemarkPane.setHgap(6);
+		backupRemarkPane.setVgap(6);
+		GridPane.setConstraints(backupRemark, 0, 0);
+		GridPane.setConstraints(backupRemarkButton, 0, 1);
+		backupRemarkPane.getChildren().addAll(backupRemark, backupRemarkButton);
+
+
 		final GridPane backupHistoryPane = new GridPane();
 		backupHistoryPane.setHgap(6);
 		backupHistoryPane.setVgap(6);
 		GridPane.setConstraints(backupHistory, 0, 0);
-		backupHistoryPane.getChildren().addAll(backupHistory);
+		GridPane.setConstraints(backupRemarkPane, 1, 0);
+		backupHistoryPane.getChildren().addAll(backupHistory, backupRemarkPane);
 
 		final GridPane actionPane = new GridPane();
 		actionPane.setHgap(6);
@@ -161,6 +187,7 @@ public class App extends Application {
 				depolyPathTextField.setText(file.getPath());
 				deployHandler.setTomcatDir(file);
 				backupHandler.setTomcatDir(file);
+				remarkHandler.setTomcatDir(file);
 				reloadHistory(backupHandler, backupHistory);
 			}
 		});
@@ -210,11 +237,82 @@ public class App extends Application {
 			}
 		});
 
+		backupHistory.setOnMouseClicked(e -> {
+			try {
+				disable(backupRemarkButton, backupRemark);
+				remarkHandler.loadRemark(
+					e,
+					t -> Platform.runLater(() -> SimpleAlert.error("讀取註記發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", t)),
+					text -> Platform.runLater(() -> {
+						backupRemark.setText(text);
+						enable(backupRemarkButton, backupRemark);
+					}),
+					() -> {}
+				);
+			} catch (final VerifyException ex) {
+				SimpleAlert.warn(ex.getMsgs());
+				ex.printStackTrace();
+			} catch (final Exception ex) {
+				SimpleAlert.error("讀取註記發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", ex);
+				ex.printStackTrace();
+			}
+		});
+
+		backupRemarkButton.setOnAction(e -> {
+			try {
+				disable(backupRemarkButton, backupRemark);
+				remarkHandler.saveRemark(
+					backupRemark.getText(),
+					backupHistory.getSelectionModel().getSelectedItem(),
+					t -> Platform.runLater(() -> {
+						SimpleAlert.error("儲存註記發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", t);
+						enable(backupRemarkButton, backupRemark);
+					}),
+					() -> {}
+				);
+			} catch (final VerifyException ex) {
+				SimpleAlert.warn(ex.getMsgs());
+				enable(backupRemarkButton, backupRemark);
+				ex.printStackTrace();
+			} catch (final Exception ex) {
+				SimpleAlert.error("儲存註記發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", ex);
+				enable(backupRemarkButton, backupRemark);
+				ex.printStackTrace();
+			}
+		});
+
+		backupRemark.setOnKeyPressed(e -> {
+			if (e.isShortcutDown() && e.isControlDown() && KeyCode.S.equals(e.getCode())) {
+				try {
+					disable(backupRemarkButton, backupRemark);
+					remarkHandler.saveRemark(
+						backupRemark.getText(),
+						backupHistory.getSelectionModel().getSelectedItem(),
+						t -> Platform.runLater(() -> {
+							SimpleAlert.error("儲存註記發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", t);
+							enable(backupRemarkButton, backupRemark);
+						}),
+						() -> {}
+					);
+				} catch (final VerifyException ex) {
+					SimpleAlert.warn(ex.getMsgs());
+					enable(backupRemarkButton, backupRemark);
+					ex.printStackTrace();
+				} catch (final Exception ex) {
+					SimpleAlert.error("儲存註記發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", ex);
+					enable(backupRemarkButton, backupRemark);
+					ex.printStackTrace();
+				}
+			}
+		});
+
 		stage.setOnCloseRequest(e -> {
 			System.exit(0);
 		});
 
-		stage.setScene(new Scene(rootGroup));
+		final Scene scene = new Scene(rootGroup);
+		scene.getStylesheets().add(getClass().getClassLoader().getResource("application.css").toExternalForm());
+		stage.setScene(scene);
 		stage.show();
 	}
 
