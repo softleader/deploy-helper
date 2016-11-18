@@ -104,7 +104,7 @@ public class RemarkHandler {
 		final StringJoiner sj = new StringJoiner("\n");
 		try (
 			FileInputStream fis = new FileInputStream(file);
-			BufferedReader bfr = new BufferedReader(new InputStreamReader(fis));
+			BufferedReader bfr = new BufferedReader(new InputStreamReader(fis, "UTF8"));
 		) {
 			String strtmp;
 			while ((strtmp = bfr.readLine()) != null) {
@@ -118,7 +118,7 @@ public class RemarkHandler {
 		final File remarkFile = tomcatDir.toPath().resolve(fileName).toFile();
 		try (
 			FileOutputStream fos = new FileOutputStream(remarkFile);
-			OutputStreamWriter osw = new OutputStreamWriter(fos);
+			OutputStreamWriter osw = new OutputStreamWriter(fos, "UTF8");
 		) {
 			osw.write(text);
 		}

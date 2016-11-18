@@ -98,7 +98,7 @@ public class App extends Application {
 		backupRemark.setPrefHeight(200);
 		backupRemark.setDisable(true);
 
-		final Button backupRemarkButton = new Button("儲存");
+		final Button backupRemarkButton = new Button("儲存(ctrl+s)");
 		backupRemarkButton.setPrefWidth(350);
 
 		// 帶入預設值
@@ -283,26 +283,7 @@ public class App extends Application {
 
 		backupRemark.setOnKeyPressed(e -> {
 			if (e.isShortcutDown() && e.isControlDown() && KeyCode.S.equals(e.getCode())) {
-				try {
-					disable(backupRemarkButton, backupRemark);
-					remarkHandler.saveRemark(
-						backupRemark.getText(),
-						backupHistory.getSelectionModel().getSelectedItem(),
-						t -> Platform.runLater(() -> {
-							SimpleAlert.error("儲存註記發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", t);
-							enable(backupRemarkButton, backupRemark);
-						}),
-						() -> {}
-					);
-				} catch (final VerifyException ex) {
-					SimpleAlert.warn(ex.getMsgs());
-					enable(backupRemarkButton, backupRemark);
-					ex.printStackTrace();
-				} catch (final Exception ex) {
-					SimpleAlert.error("儲存註記發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", ex);
-					enable(backupRemarkButton, backupRemark);
-					ex.printStackTrace();
-				}
+				backupRemarkButton.fire();
 			}
 		});
 
