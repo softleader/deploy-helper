@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.controlsfx.control.MaskerPane;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javafx.application.Application;
@@ -23,6 +25,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -70,22 +73,19 @@ public class App extends Application {
 		warChooser.getExtensionFilters().add(new ExtensionFilter("佈署檔", "*.war"));
 
 		final Button openWarButton = new Button("選擇要佈署的War檔");
-		openWarButton.setPrefWidth(150);
+		openWarButton.setPrefWidth(200);
 		final TextField warPathTextField = new TextField();
 		warPathTextField.setEditable(false);
 		warPathTextField.setPrefWidth(400);
 
 		final Button openPathButton = new Button("選擇要佈署的路徑");
-		openPathButton.setPrefWidth(150);
+		openPathButton.setPrefWidth(200);
 		final TextField depolyPathTextField = new TextField();
 		depolyPathTextField.setEditable(false);
 		depolyPathTextField.setPrefWidth(400);
 
 		final Button deployButton = new Button("開始佈署");
-		final TextField logTextField = new TextField();
-		logTextField.setEditable(false);
-		logTextField.setPrefWidth(300);
-		logTextField.setText("等待佈署");
+		deployButton.setDefaultButton(true);
 
 		final Button restoreButton = new Button("還原為指定版本");
 
@@ -157,12 +157,14 @@ public class App extends Application {
 		actionPane.setVgap(6);
 		GridPane.setConstraints(restoreButton, 0, 0);
 		GridPane.setConstraints(deployButton, 1, 0);
-		GridPane.setConstraints(logTextField, 2, 0);
-		actionPane.getChildren().addAll(restoreButton, deployButton, logTextField);
+		actionPane.getChildren().addAll(restoreButton, deployButton);
 
-		final Pane rootGroup = new VBox(12);
-		rootGroup.getChildren().addAll(propertiesPane, fileChooserPane, backupHistoryPane, actionPane);
-		rootGroup.setPadding(new Insets(12, 12, 12, 12));
+		final MaskerPane masker = new MaskerPane();
+		masker.setVisible(false);
+		final Pane root = new VBox(12);
+		root.getChildren().addAll(propertiesPane, fileChooserPane, backupHistoryPane, actionPane);
+		root.setPadding(new Insets(12, 12, 12, 12));
+		final StackPane body = new StackPane(root, masker);
 
 		// ===元素事件===
 		rb1.setOnAction(e -> {
@@ -196,22 +198,23 @@ public class App extends Application {
 			config.setKeepBackUpFile(backupCheckBox.isSelected());
 			config.setTomcatType(rb2.isSelected() ? TomcatType.service : TomcatType.bat);
 			try {
-				disable(restoreButton, backupCheckBox, openWarButton, openPathButton, deployButton, backupHistory);
+				masker.setText("準備開始進行佈署...");
+				disable(masker);
 				deployHandler.deploy(
-						log -> Platform.runLater(() -> logTextField.setText(log)),
+						log -> Platform.runLater(() -> masker.setText(log)),
 						t -> Platform.runLater(() -> SimpleAlert.error("佈署期間發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", t)),
 						() -> {
-							enable(restoreButton, backupCheckBox, openWarButton, openPathButton, deployButton, backupHistory);
+							enable(masker);
 							reloadHistory(backupHandler, backupHistory);
 						}
 				);
 			} catch (final VerifyException ex) {
 				SimpleAlert.warn(ex.getMsgs());
-				enable(restoreButton, backupCheckBox, openWarButton, openPathButton, deployButton, backupHistory);
+				enable(masker);
 				ex.printStackTrace();
 			} catch (final Exception ex) {
 				SimpleAlert.error("佈署期間發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", ex);
-				enable(restoreButton, backupCheckBox, openWarButton, openPathButton, deployButton, backupHistory);
+				enable(masker);
 				ex.printStackTrace();
 			}
 		});
@@ -220,63 +223,68 @@ public class App extends Application {
 			config.setTomcatType(rb2.isSelected() ? TomcatType.service : TomcatType.bat);
 			backupHandler.setChooseFileName(backupHistory.getSelectionModel().getSelectedItem());
 			try {
-				disable(restoreButton, backupCheckBox, openWarButton, openPathButton, deployButton, backupHistory);
+				masker.setText("準備開始進行還原...");
+				disable(masker);
 				backupHandler.restore(
-						log -> Platform.runLater(() -> logTextField.setText(log)),
+						log -> Platform.runLater(() -> masker.setText(log)),
 						t -> Platform.runLater(() -> SimpleAlert.error("還原期間發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", t)),
-						() -> enable(restoreButton, backupCheckBox, openWarButton, openPathButton, deployButton, backupHistory)
+						() -> enable(masker)
 				);
 			} catch (final VerifyException ex) {
 				SimpleAlert.warn(ex.getMsgs());
-				enable(restoreButton, backupCheckBox, openWarButton, openPathButton, deployButton, backupHistory);
+				enable(masker);
 				ex.printStackTrace();
 			} catch (final Exception ex) {
 				SimpleAlert.error("還原期間發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", ex);
-				enable(restoreButton, backupCheckBox, openWarButton, openPathButton, deployButton, backupHistory);
+				enable(masker);
 				ex.printStackTrace();
 			}
 		});
 
 		backupHistory.setOnMouseClicked(e -> {
 			try {
-				disable(backupRemarkButton, backupRemark);
+				masker.setText("讀取備份註記中...");
+				disable(masker, backupRemarkButton, backupRemark);
 				remarkHandler.loadRemark(
 					e,
 					t -> Platform.runLater(() -> SimpleAlert.error("讀取註記發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", t)),
 					text -> Platform.runLater(() -> {
 						backupRemark.setText(text);
-						enable(backupRemarkButton, backupRemark);
+						enable(masker, backupRemarkButton, backupRemark);
 					}),
-					() -> {}
+					() -> enable(masker)
 				);
 			} catch (final VerifyException ex) {
 				SimpleAlert.warn(ex.getMsgs());
+				enable(masker);
 				ex.printStackTrace();
 			} catch (final Exception ex) {
 				SimpleAlert.error("讀取註記發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", ex);
+				enable(masker);
 				ex.printStackTrace();
 			}
 		});
 
 		backupRemarkButton.setOnAction(e -> {
 			try {
-				disable(backupRemarkButton, backupRemark);
+				masker.setText("儲存備份註記中...");
+				disable(masker, backupRemarkButton, backupRemark);
 				remarkHandler.saveRemark(
 					backupRemark.getText(),
 					backupHistory.getSelectionModel().getSelectedItem(),
 					t -> Platform.runLater(() -> {
 						SimpleAlert.error("儲存註記發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", t);
-						enable(backupRemarkButton, backupRemark);
+						enable(masker, backupRemarkButton, backupRemark);
 					}),
 					() -> {}
 				);
 			} catch (final VerifyException ex) {
 				SimpleAlert.warn(ex.getMsgs());
-				enable(backupRemarkButton, backupRemark);
+				enable(masker, backupRemarkButton, backupRemark);
 				ex.printStackTrace();
 			} catch (final Exception ex) {
 				SimpleAlert.error("儲存註記發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", ex);
-				enable(backupRemarkButton, backupRemark);
+				enable(masker, backupRemarkButton, backupRemark);
 				ex.printStackTrace();
 			}
 		});
@@ -291,7 +299,7 @@ public class App extends Application {
 			System.exit(0);
 		});
 
-		final Scene scene = new Scene(rootGroup);
+		final Scene scene = new Scene(body);
 		scene.getStylesheets().add(getClass().getClassLoader().getResource("application.css").toExternalForm());
 		stage.setScene(scene);
 		stage.show();
@@ -319,13 +327,15 @@ public class App extends Application {
 		Platform.runLater(() -> backupHistory.setItems(FXCollections.observableArrayList(backupHandler.getBackupFiles().stream().map(File::getName).collect(Collectors.toList()))));
 	}
 
-	private void disable(final Node... nodes) {
+	private void disable(final MaskerPane masker, final Node... nodes) {
+		masker.setVisible(true);
 		for (final Node node : nodes) {
 			node.setDisable(true);
 		}
 	}
 
-	private void enable(final Node... nodes) {
+	private void enable(final MaskerPane masker, final Node... nodes) {
+		masker.setVisible(false);
 		for (final Node node : nodes) {
 			node.setDisable(false);
 		}
