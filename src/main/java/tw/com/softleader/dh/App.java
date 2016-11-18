@@ -90,7 +90,7 @@ public class App extends Application {
 		final Button restoreButton = new Button("還原為指定版本");
 
 		final ListView<String> backupHistory = new ListView<String>();
-		backupHistory.setPrefWidth(200);
+		backupHistory.setPrefWidth(400);
 		backupHistory.setPrefHeight(200);
 
 		final TextArea backupRemark = new TextArea();

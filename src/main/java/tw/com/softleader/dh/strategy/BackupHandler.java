@@ -1,6 +1,8 @@
 package tw.com.softleader.dh.strategy;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -13,9 +15,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
 
 import tw.com.softleader.dh.basic.Config;
+import tw.com.softleader.dh.basic.Constants;
 import tw.com.softleader.dh.basic.TomcatComponent;
 import tw.com.softleader.dh.basic.VerifyException;
 import tw.com.softleader.dh.basic.ZipUtils;
@@ -37,11 +41,7 @@ public class BackupHandler {
 	public BackupHandler(final Config config) {
 		this.config = config;
 		if (this.config != null) {
-			if (this.config.getTomcatPath() != null && !this.config.getTomcatPath().isEmpty()) {
-				tomcatDir = new File(this.config.getTomcatPath());
-			} else {
-				tomcatDir = Optional.ofNullable(System.getenv("TOMCAT_HOME")).map(File::new).orElse(null);
-			}
+			Optional.ofNullable(this.config.getTomcatPath()).map(File::new).ifPresent(this::setTomcatDir);
 		}
 
 		reload();
@@ -49,7 +49,7 @@ public class BackupHandler {
 
 	public void reload() {
 		if (tomcatDir != null && tomcatDir.exists()) {
-			final File[] files = tomcatDir.listFiles((dir, name) -> name.startsWith("webapps") && name.endsWith(".zip"));
+			final File[] files = tomcatDir.listFiles((dir, name) -> name.startsWith(Constants.BACKUP_PREFIX) && name.endsWith(Constants.BACKUP_EXTENSION));
 			if (files == null) {
 				backupFiles = new ArrayList<>();
 			} else {
@@ -68,8 +68,9 @@ public class BackupHandler {
 				TomcatComponent.shutdownTomcat(config, tomcatBinPath);
 
 				logHandle.accept("正在進行還原...");
-				recreatFolder();
-				restoreZip();
+//				recreatFolder();
+//				restoreZip();
+				restoreWar();
 
 				TomcatComponent.startupTomcat(config, tomcatBinPath);
 				logHandle.accept("還原完畢，您已經可以結束此佈署程式");
@@ -82,14 +83,32 @@ public class BackupHandler {
 		});
 	}
 
+	@SuppressWarnings("unused") // TODO for option of restore full webapps
 	private void recreatFolder() throws IOException {
 		FileUtils.deleteDirectory(tomcatWebAppPath.toFile());
 		tomcatWebAppPath.toFile().mkdir();
 	}
 
+	@SuppressWarnings("unused") // TODO for option of restore full webapps
 	private void restoreZip() throws IOException {
 		final File zipFile = backupFiles.stream().filter(file -> file.getName().equals(chooseFileName)).findFirst().orElse(null);
 		ZipUtils.decompress(new ZipFile(zipFile), tomcatWebAppPath);
+	}
+
+	private void restoreWar() throws IOException {
+		final File backupFile = backupFiles.stream().filter(file -> file.getName().equals(chooseFileName)).findFirst().orElse(null);
+		final String targetFileName = backupFile.getName().substring((Constants.BACKUP_PREFIX + "." + Constants.TIME_PATTERN + ".").length());
+		final File targetFile = tomcatWebAppPath.resolve(targetFileName).toFile();
+		if (targetFile.exists()) {
+			targetFile.delete();
+		}
+
+		try (
+			FileOutputStream fos = new FileOutputStream(targetFile);
+			FileInputStream fis = new FileInputStream(backupFile);
+		) {
+			IOUtils.copy(fis, fos);
+		}
 	}
 
 	private void verify() throws VerifyException {

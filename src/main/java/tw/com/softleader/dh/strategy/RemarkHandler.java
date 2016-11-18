@@ -33,11 +33,7 @@ public class RemarkHandler {
 	public RemarkHandler(final Config config) {
 		this.config = config;
 		if (this.config != null) {
-			if (this.config.getTomcatPath() != null && !this.config.getTomcatPath().isEmpty()) {
-				tomcatDir = new File(this.config.getTomcatPath());
-			} else {
-				tomcatDir = Optional.ofNullable(System.getenv("TOMCAT_HOME")).map(File::new).orElse(null);
-			}
+			Optional.ofNullable(this.config.getTomcatPath()).map(File::new).ifPresent(this::setTomcatDir);
 		}
 	}
 
@@ -114,8 +110,6 @@ public class RemarkHandler {
 			while ((strtmp = bfr.readLine()) != null) {
 				sj.add(strtmp);
 			}
-		} catch (final IOException e) {
-			throw e;
 		}
 		return sj.toString();
 	}
@@ -127,8 +121,6 @@ public class RemarkHandler {
 			OutputStreamWriter osw = new OutputStreamWriter(fos);
 		) {
 			osw.write(text);
-		} catch (final IOException e) {
-			throw e;
 		}
 	}
 

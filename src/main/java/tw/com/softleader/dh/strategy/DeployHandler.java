@@ -18,13 +18,14 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
 import tw.com.softleader.dh.basic.Config;
+import tw.com.softleader.dh.basic.Constants;
 import tw.com.softleader.dh.basic.TomcatComponent;
 import tw.com.softleader.dh.basic.VerifyException;
 import tw.com.softleader.dh.basic.ZipUtils;
 
 public class DeployHandler {
 
-	private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+	private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Constants.TIME_PATTERN);
 
 	// 使用者輸入
 	private File deployFile;
@@ -42,11 +43,7 @@ public class DeployHandler {
 	public DeployHandler(final Config config) {
 		this.config = config;
 		if (this.config != null) {
-			if (this.config.getTomcatPath() != null && !this.config.getTomcatPath().isEmpty()) {
-				tomcatDir = new File(this.config.getTomcatPath());
-			} else {
-				tomcatDir = Optional.ofNullable(System.getenv("TOMCAT_HOME")).map(File::new).orElse(null);
-			}
+			Optional.ofNullable(this.config.getTomcatPath()).map(File::new).ifPresent(this::setTomcatDir);
 		}
 	}
 
@@ -64,7 +61,7 @@ public class DeployHandler {
 				doBeforeStart();
 
 				logHandle.accept("正在備份本次結果...");
-				backupWebApps();
+				backupWar();
 
 				TomcatComponent.startupTomcat(config, tomcatBinPath);
 				logHandle.accept("佈署完畢，您已經可以結束此佈署程式");
@@ -108,12 +105,24 @@ public class DeployHandler {
 		}
 	}
 
+	// 備份整個webapps
+	@SuppressWarnings("unused") // TODO for option
 	private void backupWebApps() throws Exception {
-		backupFile = new File(tomcatDir.getPath() + "\\webapps." + LocalDateTime.now().format(formatter) + ".zip");
+		backupFile = new File(tomcatDir.getPath() + "/" + Constants.BACKUP_PREFIX + ".webapps." + LocalDateTime.now().format(formatter) + ".zip");
 		try (final ZipArchiveOutputStream zaos = new ZipArchiveOutputStream(backupFile)) {
 			ZipUtils.compress(zaos, tomcatWebAppPath.toFile());
 		} catch (final Exception e) {
 			throw e;
+		}
+	}
+
+	private void backupWar() throws Exception {
+		backupFile = new File(tomcatDir.getPath() + "/" + Constants.BACKUP_PREFIX + "." + LocalDateTime.now().format(formatter) + "." + deployFile.getName());
+		try (
+			FileOutputStream fos = new FileOutputStream(backupFile);
+			FileInputStream fis = new FileInputStream(deployFile);
+		) {
+			IOUtils.copy(fis, fos);
 		}
 	}
 
@@ -124,8 +133,6 @@ public class DeployHandler {
 			final FileOutputStream output = new FileOutputStream(deploiedFile);
 		) {
 			IOUtils.copy(input, output);
-		} catch (final Exception e) {
-			throw e;
 		}
 	}
 

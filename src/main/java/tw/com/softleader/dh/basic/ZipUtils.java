@@ -34,8 +34,6 @@ public class ZipUtils {
 					zaos.putArchiveEntry(new ZipArchiveEntry(pathName + files[i].getName()));
 					IOUtils.copy(fio, zaos);
 					zaos.closeArchiveEntry();
-				} catch (final Exception e) {
-					throw e;
 				}
 			}
 		}
@@ -51,8 +49,6 @@ public class ZipUtils {
 				FileOutputStream fos = new FileOutputStream(outFile);
 			) {
 				IOUtils.copy(zipFile.getInputStream(zipArchiveEntry), fos);
-			} catch (final IOException e) {
-				throw new IOException(e);
 			}
 		}
 	}

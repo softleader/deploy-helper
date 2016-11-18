@@ -2,6 +2,7 @@ package tw.com.softleader.dh.basic;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -48,7 +49,11 @@ public class Config {
 	}
 
 	public String getTomcatPath() {
-		return tomcatPath;
+		if (this.tomcatPath != null && !this.tomcatPath.isEmpty()) {
+			return this.tomcatPath;
+		} else {
+			return Optional.ofNullable(System.getenv("TOMCAT_HOME")).orElse(null);
+		}
 	}
 
 	public void setTomcatPath(final String tomcatPath) {
