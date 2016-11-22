@@ -11,8 +11,10 @@ public class TomcatComponent {
 		final List<String> cmdAndArgs;
 		if (TomcatType.service.equals(config.getTomcatType())) {
 			cmdAndArgs = Arrays.asList("cmd", "/c", "sc stop " + config.getTomcatServiceName());
-		} else {
+		} else if (TomcatType.bat.equals(config.getTomcatType())) {
 			cmdAndArgs = Arrays.asList("cmd", "/c", "shutdown.bat");
+		} else {
+			return;
 		}
 	    final ProcessBuilder pb = new ProcessBuilder(cmdAndArgs);
 	    pb.directory(tomcatBinPath.toFile());
@@ -23,8 +25,10 @@ public class TomcatComponent {
 		final List<String> cmdAndArgs;
 		if (TomcatType.service.equals(config.getTomcatType())) {
 			cmdAndArgs = Arrays.asList("cmd", "/c", "sc start " + config.getTomcatServiceName());
-		} else {
+		} else if (TomcatType.bat.equals(config.getTomcatType())) {
 			cmdAndArgs = Arrays.asList("cmd", "/k", "startup.bat");
+		} else {
+			return;
 		}
 	    final ProcessBuilder pb = new ProcessBuilder(cmdAndArgs);
 	    pb.directory(tomcatBinPath.toFile());

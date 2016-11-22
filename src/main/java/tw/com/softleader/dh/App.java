@@ -2,8 +2,11 @@ package tw.com.softleader.dh;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.controlsfx.control.MaskerPane;
 
@@ -60,10 +63,8 @@ public class App extends Application {
 		final CheckBox backupCheckBox = new CheckBox("佈署完成後仍保留備份檔案");
 
 		final ToggleGroup tomcatType = new ToggleGroup();
-		final RadioButton rb1 = new RadioButton("bat");
-		rb1.setToggleGroup(tomcatType);
-		final RadioButton rb2 = new RadioButton("service");
-		rb2.setToggleGroup(tomcatType);
+		final List<RadioButton> rbs = Stream.of(TomcatType.values()).map(type -> new RadioButton(type.toString())).collect(Collectors.toList());
+		rbs.forEach(rb -> rb.setToggleGroup(tomcatType));
 		final TextField serviceNameTextField = new TextField();
 
 		final DirectoryChooser deployTomcatChooser = new DirectoryChooser();
@@ -101,31 +102,28 @@ public class App extends Application {
 		final Button backupRemarkButton = new Button("儲存(ctrl+s)");
 		backupRemarkButton.setPrefWidth(350);
 
-		// 帶入預設值
-		Optional.ofNullable(config.getTomcatType()).ifPresent(type -> {
-			if (TomcatType.service.equals(type)) {
-				rb2.setSelected(true);
-				serviceNameTextField.setVisible(true);
-			} else {
-				rb1.setSelected(true);
-				serviceNameTextField.setVisible(false);
-			}
-		});
-		Optional.ofNullable(config.getTomcatServiceName()).ifPresent(serviceNameTextField::setText);
-		Optional.ofNullable(config.isKeepBackUpFile()).ifPresent(backupCheckBox::setSelected);
-		Optional.ofNullable(deployHandler.getDeployFile()).map(File::getPath).ifPresent(warPathTextField::setText);
-		Optional.ofNullable(deployHandler.getTomcatDir()).map(File::getPath).ifPresent(depolyPathTextField::setText);
-		reloadHistory(backupHandler, backupHistory);
-
 		// ===畫面繪製===
 		final GridPane propertiesPane = new GridPane();
-		GridPane.setConstraints(rb1, 0, 0);
-		GridPane.setConstraints(rb2, 1, 0);
-		GridPane.setConstraints(serviceNameTextField, 2, 0);
+		final List<Node> rbNodes = new ArrayList<>();
+		for (int i = 0; i < rbs.size(); i++) {
+			if (TomcatType.service.toString().equals(rbs.get(i).getText())) {
+				final GridPane serviceTypePane = new GridPane();
+				GridPane.setConstraints(rbs.get(i), 0, 0);
+				GridPane.setConstraints(serviceNameTextField, 1, 0);
+				serviceTypePane.getChildren().addAll(rbs.get(i), serviceNameTextField);
+				GridPane.setConstraints(serviceTypePane, i, 0);
+				rbNodes.add(serviceTypePane);
+			} else {
+				GridPane.setConstraints(rbs.get(i), i, 0);
+				rbNodes.add(rbs.get(i));
+			}
+		}
+
 		GridPane.setConstraints(backupCheckBox, 0, 1);
 		propertiesPane.setHgap(6);
 		propertiesPane.setVgap(6);
-		propertiesPane.getChildren().addAll(rb1, rb2, serviceNameTextField, backupCheckBox);
+		propertiesPane.getChildren().addAll(rbNodes);
+		propertiesPane.getChildren().addAll(backupCheckBox);
 
 		final GridPane fileChooserPane = new GridPane();
 		GridPane.setConstraints(openWarButton, 0, 0);
@@ -167,12 +165,18 @@ public class App extends Application {
 		final StackPane body = new StackPane(root, masker);
 
 		// ===元素事件===
-		rb1.setOnAction(e -> {
-			serviceNameTextField.setVisible(false);
-		});
-
-		rb2.setOnAction(e -> {
-			serviceNameTextField.setVisible(true);
+		rbs.forEach(rb -> {
+			if (TomcatType.service.toString().equals(rb.getText())) {
+				rb.setOnAction(e -> {
+					serviceNameTextField.setVisible(true);
+					config.setTomcatType(TomcatType.valueOf(rb.getText()));
+				});
+			} else {
+				rb.setOnAction(e -> {
+					serviceNameTextField.setVisible(false);
+					config.setTomcatType(TomcatType.valueOf(rb.getText()));
+				});
+			}
 		});
 
 		openWarButton.setOnAction(e -> {
@@ -196,7 +200,6 @@ public class App extends Application {
 
 		deployButton.setOnAction(e -> {
 			config.setKeepBackUpFile(backupCheckBox.isSelected());
-			config.setTomcatType(rb2.isSelected() ? TomcatType.service : TomcatType.bat);
 			try {
 				masker.setText("準備開始進行佈署...");
 				disable(masker);
@@ -220,7 +223,6 @@ public class App extends Application {
 		});
 
 		restoreButton.setOnAction(e -> {
-			config.setTomcatType(rb2.isSelected() ? TomcatType.service : TomcatType.bat);
 			backupHandler.setChooseFileName(backupHistory.getSelectionModel().getSelectedItem());
 			try {
 				masker.setText("準備開始進行還原...");
@@ -298,6 +300,21 @@ public class App extends Application {
 		stage.setOnCloseRequest(e -> {
 			System.exit(0);
 		});
+
+		// 帶入預設值
+		Optional.ofNullable(config.getTomcatType()).ifPresent(type -> {
+			rbs.forEach(rb -> {
+				if (type.toString().equals(rb.getText())) {
+					rb.setSelected(true);
+					rb.fire();
+				}
+			});
+		});
+		Optional.ofNullable(config.getTomcatServiceName()).ifPresent(serviceNameTextField::setText);
+		Optional.ofNullable(config.isKeepBackUpFile()).ifPresent(backupCheckBox::setSelected);
+		Optional.ofNullable(deployHandler.getDeployFile()).map(File::getPath).ifPresent(warPathTextField::setText);
+		Optional.ofNullable(deployHandler.getTomcatDir()).map(File::getPath).ifPresent(depolyPathTextField::setText);
+		reloadHistory(backupHandler, backupHistory);
 
 		final Scene scene = new Scene(body);
 		scene.getStylesheets().add(getClass().getClassLoader().getResource("application.css").toExternalForm());
