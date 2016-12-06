@@ -2,6 +2,10 @@ package tw.com.softleader.dh;
 
 import java.io.File;
 import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +24,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.ListView;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
@@ -38,6 +43,7 @@ import tw.com.softleader.dh.basic.Config;
 import tw.com.softleader.dh.basic.SimpleAlert;
 import tw.com.softleader.dh.basic.TomcatType;
 import tw.com.softleader.dh.basic.VerifyException;
+import tw.com.softleader.dh.basic.node.TimeSpinner;
 import tw.com.softleader.dh.strategy.BackupHandler;
 import tw.com.softleader.dh.strategy.DeployHandler;
 import tw.com.softleader.dh.strategy.RemarkHandler;
@@ -85,10 +91,14 @@ public class App extends Application {
 		depolyPathTextField.setEditable(false);
 		depolyPathTextField.setPrefWidth(400);
 
+		final Button restoreButton = new Button("還原為指定版本");
+
 		final Button deployButton = new Button("開始佈署");
 		deployButton.setDefaultButton(true);
 
-		final Button restoreButton = new Button("還原為指定版本");
+		final Button bookDeployButton = new Button("預約佈署");
+		final DatePicker bookDate = new DatePicker(LocalDate.now());
+		final TimeSpinner bookTime = new TimeSpinner(LocalTime.now(), DateTimeFormatter.ofPattern("HH:mm"));
 
 		final ListView<String> backupHistory = new ListView<String>();
 		backupHistory.setPrefWidth(400);
@@ -155,7 +165,10 @@ public class App extends Application {
 		actionPane.setVgap(6);
 		GridPane.setConstraints(restoreButton, 0, 0);
 		GridPane.setConstraints(deployButton, 1, 0);
-		actionPane.getChildren().addAll(restoreButton, deployButton);
+		GridPane.setConstraints(bookDeployButton, 3, 0);
+		GridPane.setConstraints(bookDate, 4, 0);
+		GridPane.setConstraints(bookTime, 5, 0);
+		actionPane.getChildren().addAll(restoreButton, deployButton, bookDeployButton, bookDate, bookTime);
 
 		final MaskerPane masker = new MaskerPane();
 		masker.setVisible(false);
@@ -209,6 +222,35 @@ public class App extends Application {
 						() -> {
 							enable(masker);
 							reloadHistory(backupHandler, backupHistory);
+							Platform.runLater(() -> SimpleAlert.info("已於 " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) + " 完成佈署"));
+						}
+				);
+			} catch (final VerifyException ex) {
+				SimpleAlert.warn(ex.getMsgs());
+				enable(masker);
+				ex.printStackTrace();
+			} catch (final Exception ex) {
+				SimpleAlert.error("佈署期間發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", ex);
+				enable(masker);
+				ex.printStackTrace();
+			}
+		});
+
+		bookDeployButton.setOnAction(e -> {
+			config.setKeepBackUpFile(backupCheckBox.isSelected());
+			try {
+				masker.setText("準備開始進行佈署...");
+				disable(masker);
+				final LocalDate date = bookDate.getValue();
+				final LocalTime time = bookTime.getValue();
+				deployHandler.book(
+						date.atTime(time),
+						log -> Platform.runLater(() -> masker.setText(log)),
+						t -> Platform.runLater(() -> SimpleAlert.error("佈署期間發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", t)),
+						() -> {
+							enable(masker);
+							reloadHistory(backupHandler, backupHistory);
+							Platform.runLater(() -> SimpleAlert.info("已於 " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) + " 完成佈署"));
 						}
 				);
 			} catch (final VerifyException ex) {
@@ -230,7 +272,10 @@ public class App extends Application {
 				backupHandler.restore(
 						log -> Platform.runLater(() -> masker.setText(log)),
 						t -> Platform.runLater(() -> SimpleAlert.error("還原期間發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", t)),
-						() -> enable(masker)
+						() -> {
+							enable(masker);
+							Platform.runLater(() -> SimpleAlert.info("已於 " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) + " 完成還原"));
+						}
 				);
 			} catch (final VerifyException ex) {
 				SimpleAlert.warn(ex.getMsgs());
