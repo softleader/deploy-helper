@@ -194,6 +194,10 @@ public class App extends Application {
 			}
 		});
 
+		serviceNameTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+			config.setTomcatServiceName(newValue);
+		});
+
 		openWarButton.setOnAction(e -> {
 			final File file = warChooser.showOpenDialog(stage);
 			if (file != null) {
