@@ -15,6 +15,9 @@ public class Config {
 	private TomcatType tomcatType; // Tomcat類型(service, bat)
 
 	@JsonProperty(required=false)
+	private String warPath; // war路徑
+
+	@JsonProperty(required=false)
 	private String tomcatPath; // Tomcat路徑
 
 	@JsonProperty(required=false)
@@ -66,6 +69,14 @@ public class Config {
 
 	public void setTomcatServiceName(final String tomcatServiceName) {
 		this.tomcatServiceName = tomcatServiceName;
+	}
+
+	public String getWarPath() {
+		return warPath;
+	}
+
+	public void setWarPath(String warPath) {
+		this.warPath = warPath;
 	}
 
 }

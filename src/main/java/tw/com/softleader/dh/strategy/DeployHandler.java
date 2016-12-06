@@ -48,6 +48,7 @@ public class DeployHandler {
 		this.config = config;
 		if (this.config != null) {
 			Optional.ofNullable(this.config.getTomcatPath()).map(File::new).ifPresent(this::setTomcatDir);
+			Optional.ofNullable(this.config.getWarPath()).map(File::new).ifPresent(this::setDeployFile);
 		}
 	}
 

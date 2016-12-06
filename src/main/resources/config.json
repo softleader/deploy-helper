@@ -1,6 +1,0 @@
-{
-	"keepBackUpFile" : true,
-	"tomcatType" : "service",
-	"tomcatPath" : "D:/apache-tomcat-8.5.4",
-	"tomcatServiceName" : "Tomcat8_5"
-}

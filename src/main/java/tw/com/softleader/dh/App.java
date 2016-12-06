@@ -1,6 +1,8 @@
 package tw.com.softleader.dh;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -196,6 +198,7 @@ public class App extends Application {
 			final File file = warChooser.showOpenDialog(stage);
 			if (file != null) {
 				warPathTextField.setText(file.getPath());
+				config.setWarPath(file.getPath());
 				deployHandler.setDeployFile(file);
 			}
 		});
@@ -207,6 +210,7 @@ public class App extends Application {
 				deployHandler.setTomcatDir(file);
 				backupHandler.setTomcatDir(file);
 				remarkHandler.setTomcatDir(file);
+				config.setTomcatPath(file.getPath());
 				reloadHistory(backupHandler, backupHistory);
 			}
 		});
@@ -223,6 +227,7 @@ public class App extends Application {
 							enable(masker);
 							reloadHistory(backupHandler, backupHistory);
 							Platform.runLater(() -> SimpleAlert.info("已於 " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) + " 完成佈署"));
+							saveConfig(config);
 						}
 				);
 			} catch (final VerifyException ex) {
@@ -251,6 +256,7 @@ public class App extends Application {
 							enable(masker);
 							reloadHistory(backupHandler, backupHistory);
 							Platform.runLater(() -> SimpleAlert.info("已於 " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) + " 完成佈署"));
+							saveConfig(config);
 						}
 				);
 			} catch (final VerifyException ex) {
@@ -275,6 +281,7 @@ public class App extends Application {
 						() -> {
 							enable(masker);
 							Platform.runLater(() -> SimpleAlert.info("已於 " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) + " 完成還原"));
+							saveConfig(config);
 						}
 				);
 			} catch (final VerifyException ex) {
@@ -323,7 +330,7 @@ public class App extends Application {
 						SimpleAlert.error("儲存註記發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", t);
 						enable(masker, backupRemarkButton, backupRemark);
 					}),
-					() -> {}
+					() -> enable(masker)
 				);
 			} catch (final VerifyException ex) {
 				SimpleAlert.warn(ex.getMsgs());
@@ -367,10 +374,13 @@ public class App extends Application {
 		stage.show();
 	}
 
+
+	private final static File configFile = new File("config.json");
+
 	private Config readConfig() {
 		Config config;
-		try(InputStream jsonStream = getClass().getClassLoader().getResourceAsStream("config.json")) {
-			config = objectMapper.readValue(jsonStream, Config.class);
+		try(InputStream configStream = new FileInputStream(configFile)) {
+			config = objectMapper.readValue(configStream, Config.class);
 			config.verify();
 		} catch (final VerifyException ex) {
 			config = new Config();
@@ -382,6 +392,14 @@ public class App extends Application {
 			ex.printStackTrace();
 		}
 		return config;
+	}
+
+	private void saveConfig(Config config) {
+		try {
+			objectMapper.writeValue(configFile, config);
+		} catch (final IOException e) {
+			Platform.runLater(() -> SimpleAlert.error("儲存設定檔時發生異常", e));
+		}
 	}
 
 	private void reloadHistory(final BackupHandler backupHandler, final ListView<String> backupHistory) {
