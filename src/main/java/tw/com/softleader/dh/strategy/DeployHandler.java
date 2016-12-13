@@ -66,7 +66,7 @@ public class DeployHandler {
 		CompletableFuture.runAsync(() -> {
 			while(LocalDateTime.now().isBefore(bookTime)) {
 				try {
-					logHandle.accept("即將在 " + countDown(bookTime) + " 秒後開始佈署, !!請勿關閉此程式!!");
+					logHandle.accept("即將在 " + countDown(bookTime) + " 後開始佈署, !!請勿關閉此程式!!");
 					Thread.sleep(1000);
 				} catch (final InterruptedException e) {
 				}
@@ -97,7 +97,7 @@ public class DeployHandler {
 			copyWarToWebApp();
 			doBeforeStart();
 
-			logHandle.accept("正在備份本次結果...");
+			logHandle.accept("正在備份...");
 			backupWar();
 
 			TomcatComponent.startupTomcat(config, tomcatBinPath);

@@ -334,7 +334,9 @@ public class App extends Application {
 						SimpleAlert.error("儲存註記發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", t);
 						enable(masker, backupRemarkButton, backupRemark);
 					}),
-					() -> enable(masker)
+					() -> {
+						enable(masker, backupRemarkButton, backupRemark);
+					}
 				);
 			} catch (final VerifyException ex) {
 				SimpleAlert.warn(ex.getMsgs());
@@ -361,7 +363,6 @@ public class App extends Application {
 		Optional.ofNullable(config.getTomcatType()).ifPresent(type -> {
 			rbs.forEach(rb -> {
 				if (type.toString().equals(rb.getText())) {
-					rb.setSelected(true);
 					rb.fire();
 				}
 			});
