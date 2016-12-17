@@ -59,6 +59,8 @@ public class BackupHandler {
 			} else {
 				this.backupFiles = Arrays.asList(files);
 			}
+		} else {
+			this.backupFiles = new ArrayList<>();
 		}
 	}
 
