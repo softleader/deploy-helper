@@ -223,7 +223,11 @@ public class App extends Application {
 		// war檔選擇
 		openWarButton.setOnAction(e -> {
 			warChooser.setInitialDirectory(null);
-			Optional.ofNullable(warPathTextField.getText()).ifPresent(path -> warChooser.setInitialDirectory(new File(path).getParentFile()));
+			Optional.ofNullable(warPathTextField.getText())
+				.map(File::new)
+				.filter(File::exists)
+				.map(File::getParentFile)
+				.ifPresent(path -> warChooser.setInitialDirectory(path));
 			final File file = warChooser.showOpenDialog(stage);
 			if (file != null) {
 				warPathTextField.setText(file.getPath());
@@ -234,7 +238,11 @@ public class App extends Application {
 		// 佈署路徑選擇
 		openTomcatButton.setOnAction(e -> {
 			warChooser.setInitialDirectory(null);
-			Optional.ofNullable(tomcatPathTextField.getText()).ifPresent(path -> dirChooser.setInitialDirectory(new File(path)));
+			Optional.ofNullable(tomcatPathTextField.getText())
+				.map(File::new)
+				.filter(File::exists)
+				.map(File::getParentFile)
+				.ifPresent(path -> dirChooser.setInitialDirectory(path));
 			final File file = dirChooser.showDialog(stage);
 			if (file != null) {
 				tomcatPathTextField.setText(file.getPath());
@@ -245,7 +253,11 @@ public class App extends Application {
 		// 備份路徑選擇
 		openBackupButton.setOnAction(e -> {
 			warChooser.setInitialDirectory(null);
-			Optional.ofNullable(backupPathTextField.getText()).ifPresent(path -> dirChooser.setInitialDirectory(new File(path)));
+			Optional.ofNullable(backupPathTextField.getText())
+			.map(File::new)
+			.filter(File::exists)
+			.map(File::getParentFile)
+			.ifPresent(path -> dirChooser.setInitialDirectory(path));
 			final File file = dirChooser.showDialog(stage);
 			if (file != null) {
 				backupPathTextField.setText(file.getPath());
