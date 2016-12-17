@@ -10,7 +10,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -27,39 +26,45 @@ import tw.com.softleader.dh.basic.ZipUtils;
 public class BackupHandler {
 
 	// 使用者輸入
-	private File tomcatDir;
 	private String chooseFileName;
 
+	// 全域設定檔(+使用者鍵入)
+	private Config config;
+
 	// 自動產生
+	private File backupDir;
+	private File tomcatDir;
 	private List<File> backupFiles;
 	private Path tomcatBinPath;
 	private Path tomcatWebAppPath;
 
-	// 全域設定檔
-	private Config config;
-
 	public BackupHandler(final Config config) {
 		this.config = config;
-		if (this.config != null) {
-			Optional.ofNullable(this.config.getTomcatPath()).map(File::new).ifPresent(this::setTomcatDir);
-		}
+		setting();
+	}
 
-		reload();
+	private void setting() {
+		this.backupDir = new File(this.config.getBackupPath());
+		this.tomcatDir = new File(this.config.getTomcatPath());
+		this.tomcatBinPath = tomcatDir.toPath().resolve("bin");
+		this.tomcatWebAppPath = tomcatDir.toPath().resolve("webapps");
 	}
 
 	public void reload() {
-		if (tomcatDir != null && tomcatDir.exists()) {
-			final File[] files = tomcatDir.listFiles((dir, name) -> name.startsWith(Constants.BACKUP_PREFIX) && name.endsWith(Constants.BACKUP_EXTENSION));
+		setting();
+		if (this.backupDir != null && this.backupDir.exists()) {
+			final File[] files = this.backupDir.listFiles((dir, name) -> name.startsWith(Constants.BACKUP_PREFIX) && name.endsWith(Constants.BACKUP_EXTENSION));
 			if (files == null) {
-				backupFiles = new ArrayList<>();
+				this.backupFiles = new ArrayList<>();
 			} else {
-				backupFiles = Arrays.asList(files);
+				this.backupFiles = Arrays.asList(files);
 			}
 		}
 	}
 
 	public void restore(final Consumer<String> logHandle, final Consumer<Throwable> errorHandle, final Runnable callback) throws VerifyException {
 		logHandle.accept("資料校驗中...");
+		setting();
 		verify();
 
 		CompletableFuture.runAsync(() -> {
@@ -117,16 +122,16 @@ public class BackupHandler {
 		if (!isFileCanUse(tomcatDir)) {
 			msgs.add("請選擇Tomcat路徑");
 		} else {
-			final Path tomcatPath = tomcatDir.toPath();
-
-			this.tomcatBinPath = tomcatPath.resolve("bin");
 			if (!isPathCanUse(this.tomcatBinPath)) {
 				msgs.add("找不到 " + this.tomcatBinPath.toString() + " 請確認您選擇的是正確的Tomcat");
 			}
 
-			this.tomcatWebAppPath = tomcatPath.resolve("webapps");
 			if (!isPathCanUse(this.tomcatWebAppPath)) {
 				msgs.add("找不到 " + this.tomcatWebAppPath.toString() + " 請確認您選擇的是正確的Tomcat");
+			}
+
+			if (!isFileCanUse(this.backupDir)) {
+				msgs.add("找不到 " + this.tomcatWebAppPath.toString() + " 請確認您選擇的是正確的備份路徑");
 			}
 		}
 
@@ -157,21 +162,8 @@ public class BackupHandler {
 		this.chooseFileName = chooseFileName;
 	}
 
-	public File getTomcatDir() {
-		return tomcatDir;
-	}
-
-	public void setTomcatDir(final File tomcatDir) {
-		config.setTomcatPath(tomcatDir.getPath());
-		this.tomcatDir = tomcatDir;
-	}
-
 	public List<File> getBackupFiles() {
 		return backupFiles;
-	}
-
-	public void setBackupFiles(final List<File> backupFiles) {
-		this.backupFiles = backupFiles;
 	}
 
 }

@@ -18,6 +18,9 @@ public class Config {
 	private String warPath; // war路徑
 
 	@JsonProperty(required=false)
+	private String backupPath; // backup路徑
+
+	@JsonProperty(required=false)
 	private String tomcatPath; // Tomcat路徑
 
 	@JsonProperty(required=false)
@@ -77,6 +80,14 @@ public class Config {
 
 	public void setWarPath(String warPath) {
 		this.warPath = warPath;
+	}
+
+	public String getBackupPath() {
+		return backupPath;
+	}
+
+	public void setBackupPath(String backupPath) {
+		this.backupPath = backupPath;
 	}
 
 }

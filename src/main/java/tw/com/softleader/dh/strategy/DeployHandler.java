@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -31,29 +30,34 @@ public class DeployHandler {
 
 	private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Constants.TIME_PATTERN);
 
-	// 使用者輸入
-	private File deployFile;
-	private File tomcatDir;
+	// 全域設定檔(+使用者鍵入)
+	private Config config;
 
 	// 自動產生
+	private File deployFile;
+	private File backupDir;
+	private File tomcatDir;
 	private Path tomcatBinPath;
 	private Path tomcatWebAppPath;
 	private File backupFile;
 	private File deploiedFile;
 
-	// 全域設定檔
-	private Config config;
-
 	public DeployHandler(final Config config) {
 		this.config = config;
-		if (this.config != null) {
-			Optional.ofNullable(this.config.getTomcatPath()).map(File::new).ifPresent(this::setTomcatDir);
-			Optional.ofNullable(this.config.getWarPath()).map(File::new).ifPresent(this::setDeployFile);
-		}
+		setting();
+	}
+
+	private void setting() {
+		this.deployFile = new File(this.config.getWarPath());
+		this.backupDir = new File(this.config.getBackupPath());
+		this.tomcatDir = new File(this.config.getTomcatPath());
+		this.tomcatBinPath = tomcatDir.toPath().resolve("bin");
+		this.tomcatWebAppPath = tomcatDir.toPath().resolve("webapps");
 	}
 
 	public void book(final LocalDateTime bookTime, final Consumer<String> logHandle, final Consumer<Throwable> errorHandle, final Runnable callback) throws Exception {
 		logHandle.accept("資料校驗中...");
+		setting();
 		verify();
 		verifyBook(bookTime);
 
@@ -82,6 +86,7 @@ public class DeployHandler {
 
 	public void deploy(final Consumer<String> logHandle, final Consumer<Throwable> errorHandle, final Runnable callback) throws Exception {
 		logHandle.accept("資料校驗中...");
+		setting();
 		verify();
 
 		CompletableFuture.runAsync(() -> doDepoly(logHandle, errorHandle, callback));
@@ -120,16 +125,16 @@ public class DeployHandler {
 		if (!isFileCanUse(tomcatDir)) {
 			msgs.add("請選擇佈署路徑");
 		} else {
-			final Path tomcatPath = tomcatDir.toPath();
-
-			this.tomcatBinPath = tomcatPath.resolve("bin");
 			if (!isPathCanUse(this.tomcatBinPath)) {
 				msgs.add("找不到 " + this.tomcatBinPath.toString() + " 請確認您選擇的是正確的Tomcat");
 			}
 
-			this.tomcatWebAppPath = tomcatPath.resolve("webapps");
 			if (!isPathCanUse(this.tomcatWebAppPath)) {
 				msgs.add("找不到 " + this.tomcatWebAppPath.toString() + " 請確認您選擇的是正確的Tomcat");
+			}
+
+			if (this.config.isKeepBackUpFile() && !isFileCanUse(this.backupDir)) {
+				msgs.add("找不到 " + this.tomcatWebAppPath.toString() + " 請確認您選擇的是正確的備份路徑");
 			}
 		}
 
@@ -166,12 +171,14 @@ public class DeployHandler {
 	}
 
 	private void backupWar() throws Exception {
-		backupFile = new File(tomcatDir.getPath() + "/" + Constants.BACKUP_PREFIX + "." + LocalDateTime.now().format(formatter) + "." + deployFile.getName());
-		try (
-			FileOutputStream fos = new FileOutputStream(backupFile);
-			FileInputStream fis = new FileInputStream(deployFile);
-		) {
-			IOUtils.copy(fis, fos);
+		if (backupDir != null && backupDir.exists()) {
+			backupFile = new File(backupDir.getPath() + "/" + Constants.BACKUP_PREFIX + "." + LocalDateTime.now().format(formatter) + "." + deployFile.getName());
+			try (
+				FileOutputStream fos = new FileOutputStream(backupFile);
+				FileInputStream fis = new FileInputStream(deployFile);
+			) {
+				IOUtils.copy(fis, fos);
+			}
 		}
 	}
 
@@ -197,39 +204,6 @@ public class DeployHandler {
 
 	private boolean isFileCanUse(final File file) {
 		return file != null && file.exists();
-	}
-
-	public File getDeployFile() {
-		return deployFile;
-	}
-
-	public File getTomcatDir() {
-		return tomcatDir;
-	}
-
-	public Path getTomcatBinPath() {
-		return tomcatBinPath;
-	}
-
-	public Path getTomcatWebAppPath() {
-		return tomcatWebAppPath;
-	}
-
-	public File getBackupFile() {
-		return backupFile;
-	}
-
-	public File getDeploiedFile() {
-		return deploiedFile;
-	}
-
-	public void setDeployFile(final File deployFile) {
-		this.deployFile = deployFile;
-	}
-
-	public void setTomcatDir(final File deployTomcatPath) {
-		config.setTomcatPath(deployTomcatPath.getPath());
-		this.tomcatDir = deployTomcatPath;
 	}
 
 }

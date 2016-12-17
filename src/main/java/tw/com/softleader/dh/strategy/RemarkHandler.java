@@ -10,7 +10,6 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -24,20 +23,23 @@ import tw.com.softleader.dh.basic.VerifyException;
 @SuppressWarnings("restriction")
 public class RemarkHandler {
 
-	// 使用者輸入
-	private File tomcatDir;
-
-	// 全域設定檔
+	// 全域設定檔(+使用者鍵入)
 	private Config config;
+
+	// 自動產生
+	private File backupDir;
 
 	public RemarkHandler(final Config config) {
 		this.config = config;
-		if (this.config != null) {
-			Optional.ofNullable(this.config.getTomcatPath()).map(File::new).ifPresent(this::setTomcatDir);
-		}
+		setting();
+	}
+
+	private void setting() {
+		this.backupDir = new File(this.config.getBackupPath());
 	}
 
 	public void loadRemark(final MouseEvent event, final Consumer<Throwable> errorHandle, final Consumer<String> afterLoad, final Runnable callback) throws VerifyException {
+		setting();
 		verify();
 		CompletableFuture.runAsync(() -> {
 			try {
@@ -76,8 +78,8 @@ public class RemarkHandler {
 	private void verify() throws VerifyException {
 		final List<String> msgs = new ArrayList<>();
 
-		if (!isFileCanUse(tomcatDir)) {
-			msgs.add("請選擇Tomcat路徑");
+		if (!isFileCanUse(backupDir)) {
+			msgs.add("請選擇備份路徑");
 		}
 
 		if (!msgs.isEmpty()) {
@@ -92,7 +94,7 @@ public class RemarkHandler {
 	}
 
 	private String readRemarkFile(final String fileName) throws IOException {
-		final Path remarkFile = tomcatDir.toPath().resolve(fileName);
+		final Path remarkFile = backupDir.toPath().resolve(fileName);
 		if (remarkFile.toFile().exists()) {
 			return read(remarkFile.toFile());
 		} else {
@@ -115,7 +117,7 @@ public class RemarkHandler {
 	}
 
 	private void writeRemarkFile(final String fileName, final String text) throws IOException {
-		final File remarkFile = tomcatDir.toPath().resolve(fileName).toFile();
+		final File remarkFile = backupDir.toPath().resolve(fileName).toFile();
 		try (
 			FileOutputStream fos = new FileOutputStream(remarkFile);
 			OutputStreamWriter osw = new OutputStreamWriter(fos, "UTF8");
@@ -125,18 +127,10 @@ public class RemarkHandler {
 	}
 
 	private void tryDeleteFile(final String fileName) {
-		final Path remarkFile = tomcatDir.toPath().resolve(fileName);
+		final Path remarkFile = backupDir.toPath().resolve(fileName);
 		if (remarkFile.toFile().exists()) {
 			remarkFile.toFile().delete();
 		}
-	}
-
-	public File getTomcatDir() {
-		return tomcatDir;
-	}
-
-	public void setTomcatDir(final File tomcatDir) {
-		this.tomcatDir = tomcatDir;
 	}
 
 }
