@@ -190,7 +190,7 @@ public class App extends Application {
 		GridPane.setConstraints(bookDeployButton, 3, 0);
 		GridPane.setConstraints(bookDate, 4, 0);
 		GridPane.setConstraints(bookTime, 5, 0);
-		actionPane.getChildren().addAll(restoreButton, deployButton, bookDeployButton, bookDate, bookTime);
+		actionPane.getChildren().addAll(restoreButton, deployButton);
 
 		// 燈箱區塊
 		final MaskerPane masker = new MaskerPane();
