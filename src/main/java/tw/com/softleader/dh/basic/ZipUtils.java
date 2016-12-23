@@ -25,13 +25,13 @@ public class ZipUtils {
 		if (files == null || files.length < 1) {
 			return;
 		}
-		for (int i = 0; i < files.length; i++) {
+		for (File file : files) {
 			// 判斷此檔是否是一個資料夾
-			if (files[i].isDirectory()) {
-				compress(zaos, files[i], pathName + files[i].getName() + File.separator);
+			if (file.isDirectory()) {
+				compress(zaos, file, pathName + file.getName() + File.separator);
 			} else {
-				try (FileInputStream fio = new FileInputStream(files[i])) {
-					zaos.putArchiveEntry(new ZipArchiveEntry(pathName + files[i].getName()));
+				try (FileInputStream fio = new FileInputStream(file)) {
+					zaos.putArchiveEntry(new ZipArchiveEntry(pathName + file.getName()));
 					IOUtils.copy(fio, zaos);
 					zaos.closeArchiveEntry();
 				}

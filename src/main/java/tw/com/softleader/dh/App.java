@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -216,9 +217,7 @@ public class App extends Application {
 		});
 
 		// Tomcat service輸入
-		serviceNameTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-			config.setTomcatServiceName(newValue);
-		});
+		serviceNameTextField.textProperty().addListener((observable, oldValue, newValue) -> config.setTomcatServiceName(newValue));
 
 		// war檔選擇
 		openWarButton.setOnAction(e -> {
@@ -227,7 +226,7 @@ public class App extends Application {
 				.map(File::new)
 				.filter(File::exists)
 				.map(File::getParentFile)
-				.ifPresent(path -> warChooser.setInitialDirectory(path));
+				.ifPresent(warChooser::setInitialDirectory);
 			final File file = warChooser.showOpenDialog(stage);
 			if (file != null) {
 				warPathTextField.setText(file.getPath());
@@ -242,7 +241,7 @@ public class App extends Application {
 				.map(File::new)
 				.filter(File::exists)
 				.map(File::getParentFile)
-				.ifPresent(path -> dirChooser.setInitialDirectory(path));
+				.ifPresent(dirChooser::setInitialDirectory);
 			final File file = dirChooser.showDialog(stage);
 			if (file != null) {
 				tomcatPathTextField.setText(file.getPath());
@@ -257,7 +256,7 @@ public class App extends Application {
 			.map(File::new)
 			.filter(File::exists)
 			.map(File::getParentFile)
-			.ifPresent(path -> dirChooser.setInitialDirectory(path));
+			.ifPresent(dirChooser::setInitialDirectory);
 			final File file = dirChooser.showDialog(stage);
 			if (file != null) {
 				backupPathTextField.setText(file.getPath());
@@ -386,9 +385,7 @@ public class App extends Application {
 						SimpleAlert.error("儲存註記發生預期外的錯誤\n請擷取以下訊息並通報系統管理員", t);
 						enable(masker, backupRemarkButton, backupRemark);
 					}),
-					() -> {
-						enable(masker, backupRemarkButton, backupRemark);
-					}
+					() -> enable(masker, backupRemarkButton, backupRemark)
 				);
 			} catch (final VerifyException ex) {
 				SimpleAlert.warn(ex.getMsgs());
@@ -409,18 +406,14 @@ public class App extends Application {
 		});
 
 		// 視窗關閉
-		stage.setOnCloseRequest(e -> {
-			System.exit(0);
-		});
+		stage.setOnCloseRequest(e -> System.exit(0));
 
 		// 帶入預設值
-		Optional.ofNullable(config.getTomcatType()).ifPresent(type -> {
-			rbs.forEach(rb -> {
-				if (type.toString().equals(rb.getText())) {
-					rb.fire();
-				}
-			});
-		});
+		Optional.ofNullable(config.getTomcatType()).ifPresent(type -> rbs.forEach(rb -> {
+            if (type.toString().equals(rb.getText())) {
+                rb.fire();
+            }
+        }));
 		Optional.ofNullable(config.getTomcatServiceName()).ifPresent(serviceNameTextField::setText);
 		Optional.ofNullable(config.isKeepBackUpFile()).ifPresent(backupCheckBox::setSelected);
 		Optional.ofNullable(config.getWarPath()).ifPresent(warPathTextField::setText);
@@ -430,7 +423,7 @@ public class App extends Application {
 		reloadHistory(backupHandler, backupHistory);
 
 		final Scene scene = new Scene(body);
-		scene.getStylesheets().add(getClass().getClassLoader().getResource("application.css").toExternalForm());
+		Optional.ofNullable(getClass().getClassLoader().getResource("application.css")).map(URL::toExternalForm).ifPresent(scene.getStylesheets()::add);
 		stage.setScene(scene);
 		stage.show();
 	}

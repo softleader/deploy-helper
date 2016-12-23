@@ -72,7 +72,7 @@ public class DeployHandler {
 				try {
 					logHandle.accept("即將在 " + countDown(bookTime) + " 後開始佈署, !!請勿關閉此程式!!");
 					Thread.sleep(1000);
-				} catch (final InterruptedException e) {
+				} catch (final InterruptedException ignored) {
 				}
 			}
 			logHandle.accept("即將開始佈署...");
@@ -165,8 +165,6 @@ public class DeployHandler {
 		backupFile = new File(tomcatDir.getPath() + "/" + Constants.BACKUP_PREFIX + ".webapps." + LocalDateTime.now().format(formatter) + ".zip");
 		try (final ZipArchiveOutputStream zaos = new ZipArchiveOutputStream(backupFile)) {
 			ZipUtils.compress(zaos, tomcatWebAppPath.toFile());
-		} catch (final Exception e) {
-			throw e;
 		}
 	}
 

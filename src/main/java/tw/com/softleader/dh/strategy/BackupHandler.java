@@ -1,5 +1,10 @@
 package tw.com.softleader.dh.strategy;
 
+import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.io.FileUtils;
+import tw.com.softleader.dh.basic.*;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -12,16 +17,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-
-import org.apache.commons.compress.archivers.zip.ZipFile;
-import org.apache.commons.compress.utils.IOUtils;
-import org.apache.commons.io.FileUtils;
-
-import tw.com.softleader.dh.basic.Config;
-import tw.com.softleader.dh.basic.Constants;
-import tw.com.softleader.dh.basic.TomcatComponent;
-import tw.com.softleader.dh.basic.VerifyException;
-import tw.com.softleader.dh.basic.ZipUtils;
 
 public class BackupHandler {
 
@@ -154,10 +149,6 @@ public class BackupHandler {
 
 	private boolean isFileCanUse(final File file) {
 		return file != null && file.exists();
-	}
-
-	public String getChooseFileName() {
-		return chooseFileName;
 	}
 
 	public void setChooseFileName(final String chooseFileName) {

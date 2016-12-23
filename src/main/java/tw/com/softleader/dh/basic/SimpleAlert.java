@@ -76,11 +76,11 @@ public class SimpleAlert extends Alert {
         return simpleAlert;
     }
 
-    public final TextArea expTextArea;
-    public final TextField expTextField;
-    public final GridPane expContent;
+    private final TextArea expTextArea;
+    private final TextField expTextField;
+    private final GridPane expContent;
 
-    public SimpleAlert() {
+    private SimpleAlert() {
         super(AlertType.NONE);
 
         expTextArea = new TextArea();

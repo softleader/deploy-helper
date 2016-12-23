@@ -8,22 +8,22 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Config {
 
-	@JsonProperty(required=false)
+	@JsonProperty
 	private boolean keepBackUpFile; // 是否保留備份檔
 
-	@JsonProperty(required=false)
+	@JsonProperty
 	private TomcatType tomcatType; // Tomcat類型(service, bat)
 
-	@JsonProperty(required=false)
+	@JsonProperty
 	private String warPath; // war路徑
 
-	@JsonProperty(required=false)
+	@JsonProperty
 	private String backupPath; // backup路徑
 
-	@JsonProperty(required=false)
+	@JsonProperty
 	private String tomcatPath; // Tomcat路徑
 
-	@JsonProperty(required=false)
+	@JsonProperty
 	private String tomcatServiceName; // Tomcat Service名稱(如有選tomcatType=service)
 
 	public void verify() throws VerifyException {
