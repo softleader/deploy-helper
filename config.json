@@ -1,1 +1,1 @@
-{"keepBackUpFile":true,"tomcatType":"none","warPath":"D:\\softleaderProject\\softleader-leave\\target\\softleader-leave.war","backupPath":"D:\\apache-tomcat-8.5.4\\backup","tomcatPath":"D:\\apache-tomcat-8.5.4","tomcatServiceName":"Tomcat8_5"}
+{"keepBackUpFile":true,"tomcatType":"service","warPath":"C:\\develop\\svnbox intellij\\demo-web\\target\\demo-0.0.1-SNAPSHOT.war","backupPath":"C:\\develop\\apache-tomcat-9.0.8\\backup","tomcatPath":"C:\\develop\\apache-tomcat-9.0.8","tomcatServiceName":"Tomcat9"}

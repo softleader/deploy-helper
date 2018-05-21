@@ -1,10 +1,5 @@
 package tw.com.softleader.dh.strategy;
 
-import org.apache.commons.compress.archivers.zip.ZipFile;
-import org.apache.commons.compress.utils.IOUtils;
-import org.apache.commons.io.FileUtils;
-import tw.com.softleader.dh.basic.*;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -15,8 +10,19 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+
+import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.io.FileUtils;
+
+import tw.com.softleader.dh.basic.Config;
+import tw.com.softleader.dh.basic.Constants;
+import tw.com.softleader.dh.basic.TomcatComponent;
+import tw.com.softleader.dh.basic.VerifyException;
+import tw.com.softleader.dh.basic.ZipUtils;
 
 public class BackupHandler {
 
@@ -39,10 +45,10 @@ public class BackupHandler {
 	}
 
 	private void setting() {
-		this.backupDir = new File(this.config.getBackupPath());
-		this.tomcatDir = new File(this.config.getTomcatPath());
-		this.tomcatBinPath = tomcatDir.toPath().resolve("bin");
-		this.tomcatWebAppPath = tomcatDir.toPath().resolve("webapps");
+		this.backupDir = Optional.ofNullable(this.config.getBackupPath()).map(File::new).orElse(null);
+		this.tomcatDir = Optional.ofNullable(this.config.getTomcatPath()).map(File::new).orElse(null);
+		this.tomcatBinPath = Optional.ofNullable(tomcatDir).map(File::toPath).map(p -> p.resolve("bin")).orElse(null);
+		this.tomcatWebAppPath = Optional.ofNullable(tomcatDir).map(File::toPath).map(p -> p.resolve("webapps")).orElse(null);
 	}
 
 	public void reload() {

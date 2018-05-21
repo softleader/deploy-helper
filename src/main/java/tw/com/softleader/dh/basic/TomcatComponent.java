@@ -10,9 +10,9 @@ public class TomcatComponent {
 	public static void shutdownTomcat(final Config config, final Path tomcatBinPath) throws IOException, InterruptedException {
 		final List<String> cmdAndArgs;
 		if (TomcatType.service.equals(config.getTomcatType())) {
-			cmdAndArgs = Arrays.asList("cmd", "/c", "sc stop " + config.getTomcatServiceName());
+			cmdAndArgs = Arrays.asList("cmd.exe", "/c", "net", "stop", config.getTomcatServiceName());
 		} else if (TomcatType.bat.equals(config.getTomcatType())) {
-			cmdAndArgs = Arrays.asList("cmd", "/c", "shutdown.bat");
+			cmdAndArgs = Arrays.asList("cmd.exe", "/c", "shutdown.bat");
 		} else {
 			return;
 		}
@@ -24,9 +24,9 @@ public class TomcatComponent {
 	public static void startupTomcat(final Config config, final Path tomcatBinPath) throws IOException, InterruptedException {
 		final List<String> cmdAndArgs;
 		if (TomcatType.service.equals(config.getTomcatType())) {
-			cmdAndArgs = Arrays.asList("cmd", "/c", "sc start " + config.getTomcatServiceName());
+			cmdAndArgs = Arrays.asList("cmd.exe", "/c", "net", "start", config.getTomcatServiceName());
 		} else if (TomcatType.bat.equals(config.getTomcatType())) {
-			cmdAndArgs = Arrays.asList("cmd", "/k", "startup.bat");
+			cmdAndArgs = Arrays.asList("cmd.exe", "/c", "startup.bat");
 		} else {
 			return;
 		}

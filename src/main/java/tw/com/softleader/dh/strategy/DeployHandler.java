@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -48,11 +49,11 @@ public class DeployHandler {
 	}
 
 	private void setting() {
-		this.deployFile = new File(this.config.getWarPath());
-		this.backupDir = new File(this.config.getBackupPath());
-		this.tomcatDir = new File(this.config.getTomcatPath());
-		this.tomcatBinPath = tomcatDir.toPath().resolve("bin");
-		this.tomcatWebAppPath = tomcatDir.toPath().resolve("webapps");
+		this.deployFile = Optional.ofNullable(this.config.getWarPath()).map(File::new).orElse(null);
+		this.backupDir = Optional.ofNullable(this.config.getBackupPath()).map(File::new).orElse(null);
+		this.tomcatDir = Optional.ofNullable(this.config.getTomcatPath()).map(File::new).orElse(null);
+		this.tomcatBinPath = Optional.ofNullable(tomcatDir).map(File::toPath).map(p -> p.resolve("bin")).orElse(null);
+		this.tomcatWebAppPath = Optional.ofNullable(tomcatDir).map(File::toPath).map(p -> p.resolve("webapps")).orElse(null);
 	}
 
 	public void book(final LocalDateTime bookTime, final Consumer<String> logHandle, final Consumer<Throwable> errorHandle, final Runnable callback) throws Exception {

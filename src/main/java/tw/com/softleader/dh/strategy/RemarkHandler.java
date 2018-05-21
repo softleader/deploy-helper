@@ -10,6 +10,7 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -35,7 +36,7 @@ public class RemarkHandler {
 	}
 
 	private void setting() {
-		this.backupDir = new File(this.config.getBackupPath());
+		this.backupDir = Optional.ofNullable(this.config.getBackupPath()).map(File::new).orElse(null);
 	}
 
 	public void loadRemark(final MouseEvent event, final Consumer<Throwable> errorHandle, final Consumer<String> afterLoad, final Runnable callback) throws VerifyException {

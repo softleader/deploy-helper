@@ -2,8 +2,10 @@ package tw.com.softleader.dh;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -56,7 +58,7 @@ public class App extends Application {
 	private ObjectMapper objectMapper = new ObjectMapper();
 
 	@Override
-	public void start(final Stage stage) {
+	public void start(final Stage stage) throws IOException {
 		stage.setTitle("DeployHelper");
 
 		final Config config = readConfig();
@@ -429,19 +431,29 @@ public class App extends Application {
 	}
 
 
-	private final static File configFile = new File("config.json");
+	private final static File CONFIG_FILE = new File("config.json");
 
 	private Config readConfig() {
 		Config config;
-		try(InputStream configStream = new FileInputStream(configFile)) {
+
+		Config dummy = new Config();
+		if (!CONFIG_FILE.exists()) {
+			try (OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(CONFIG_FILE))) {
+				osw.write(objectMapper.writeValueAsString(dummy));
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		try(InputStream configStream = new FileInputStream(CONFIG_FILE)) {
 			config = objectMapper.readValue(configStream, Config.class);
 			config.verify();
 		} catch (final VerifyException ex) {
-			config = new Config();
+			config = dummy;
 			SimpleAlert.warn(ex.getMsgs());
 			ex.printStackTrace();
 		} catch (final Exception ex) {
-			config = new Config();
+			config = dummy;
 			SimpleAlert.error("讀取設定檔發生錯誤\n請擷取以下訊息並通報系統管理員", ex);
 			ex.printStackTrace();
 		}
@@ -450,7 +462,7 @@ public class App extends Application {
 
 	private void saveConfig(Config config) {
 		try {
-			objectMapper.writeValue(configFile, config);
+			objectMapper.writeValue(CONFIG_FILE, config);
 		} catch (final IOException e) {
 			Platform.runLater(() -> SimpleAlert.error("儲存設定檔時發生異常", e));
 		}
@@ -476,8 +488,8 @@ public class App extends Application {
 		}
 	}
 
-	public static void main(final String[] args) {
-		Application.launch(args);
+	public static void main(final String[] args) throws IOException {
+		App.launch(args);
 	}
 
 }
