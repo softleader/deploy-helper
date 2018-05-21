@@ -82,7 +82,7 @@ public class DeployHandler {
 
 	private String countDown(final LocalDateTime target) {
 		final long d = Duration.between(LocalDateTime.now(), target).getSeconds();
-		return (d / 60) + "分" + (d % 60) + "秒";
+		return String.format("%d:%02d:%02d", d / 3600, (d % 3600) / 60, (d % 60));
 	}
 
 	public void deploy(final Consumer<String> logHandle, final Consumer<Throwable> errorHandle, final Runnable callback) throws Exception {
