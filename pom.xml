@@ -11,7 +11,9 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<source.code.version>1.8</source.code.version>
+		<source.code.version>11</source.code.version>
+		<moduleName>build</moduleName>
+		<mainClass>tw.com.softleader.dh.App</mainClass>
 	</properties>
 
 	<dependencies>
@@ -30,34 +32,67 @@
 			<artifactId>commons-compress</artifactId>
 			<version>1.8</version>
 		</dependency>
+
 		<dependency>
-		    <groupId>org.controlsfx</groupId>
-		    <artifactId>controlsfx</artifactId>
-		    <version>8.40.12</version>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-base</artifactId>
+			<version>11.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-controls</artifactId>
+			<version>11.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-fxml</artifactId>
+			<version>11.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-graphics</artifactId>
+			<version>11.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.controlsfx</groupId>
+			<artifactId>controlsfx</artifactId>
+			<version>8.40.12</version>
 		</dependency>
 	</dependencies>
 
 	<build>
-		<finalName>${project.artifactId}-${project.version}</finalName>
+		<finalName>${project.artifactId}</finalName>
 		<pluginManagement>
 			<plugins>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.3</version>
+					<version>3.7.0</version>
 					<configuration>
 						<source>${source.code.version}</source>
 						<target>${source.code.version}</target>
 					</configuration>
+					<dependencies>
+						<dependency>
+							<groupId>org.ow2.asm</groupId>
+							<artifactId>asm</artifactId>
+							<version>6.2.1</version> <!-- Use newer version of ASM -->
+						</dependency>
+					</dependencies>
 				</plugin>
 				<plugin>
-					<groupId>com.zenjava</groupId>
-					<artifactId>javafx-maven-plugin</artifactId>
-					<version>8.7.0</version>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>exec-maven-plugin</artifactId>
+					<version>1.6.0</version>
+					<executions>
+						<execution>
+							<goals>
+								<goal>java</goal>
+							</goals>
+						</execution>
+					</executions>
 					<configuration>
-						<mainClass>tw.com.softleader.dh.App</mainClass>
-						<verbose>true</verbose>
-						<vendor>deploy-helper</vendor>
+						<mainClass>${mainClass}</mainClass>
 					</configuration>
 				</plugin>
 			</plugins>

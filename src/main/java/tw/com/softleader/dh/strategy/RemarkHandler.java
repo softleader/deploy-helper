@@ -15,7 +15,7 @@ import java.util.StringJoiner;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-import com.sun.javafx.scene.control.skin.LabeledText;
+import com.sun.javafx.scene.control.LabeledText;
 
 import javafx.scene.input.MouseEvent;
 import tw.com.softleader.dh.basic.Config;
